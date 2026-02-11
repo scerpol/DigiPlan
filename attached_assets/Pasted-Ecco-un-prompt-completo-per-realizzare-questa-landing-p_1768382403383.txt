@@ -1,0 +1,71 @@
+Ecco un prompt completo per realizzare questa landing page:
+
+---
+
+**PROMPT PER CREARE LANDING PAGE DIGIPLAN**
+
+Crea una landing page moderna e minimalista in stile Apple per "DigiPlan", un servizio di digitalizzazione planimetrie catastali rivolto ad agenzie immobiliari.
+
+**STRUTTURA DELLA PAGINA:**
+
+1. **Hero Section**
+   - Titolo: "DigiPlan"
+   - Sottotitolo: "Trasformiamo le vecchie planimetrie catastali in rappresentazioni digitali moderne e accattivanti per le tue proprietà"
+   - CTA button prominente: "Inizia ora" (che porta a #contatti)
+   - Sfondo con gradiente moderno (viola/blu)
+   - Indicatore scroll animato in basso
+
+2. **Chi Siamo**
+   - Titolo: "Chi siamo"
+   - Contenuto: Presentare il team come professionisti tecnici (due geometri e un architetto) con esperienza in architettura civile e progettazione edilizia. Enfatizzare competenza tecnica e sensibilità progettuale. Spiegare come trasformano documenti catastali obsoleti in planimetrie digitali moderne per agenzie immobiliari.
+   - Stile: testo in prosa, max 3 paragrafi, font grande e leggibile
+
+3. **La Trasformazione (Esempi)**
+   - Titolo: "La trasformazione"
+   - Griglia responsive di 3 card:
+     - **Card 1**: Comparazione Prima/Dopo split-screen
+       - Lato sinistro (PRIMA): planimetria catastale vecchio stile in formato testuale (stile Courier, su sfondo grigio chiaro)
+       - Lato destro (DOPO): planimetria moderna con layout grafico colorato, stanze ben definite con colori pastello diversi per ogni ambiente
+       - Descrizione: "Trilocale 65 m² - Da planimetria catastale testuale a rappresentazione grafica moderna"
+     - **Card 2**: Villa bifamiliare con descrizione
+     - **Card 3**: Ufficio open space con descrizione
+   - Effetto hover: sollevamento card
+
+4. **Tariffe**
+   - Titolo: "Tariffe"
+   - 3 card pricing in griglia responsive:
+     - **Base (50€)**: Rilievo preciso, disegno 2D digitale, quote e dimensioni, file PDF e DWG
+     - **Premium (70€)** - evidenziato con badge "Più scelto" e sfondo gradiente colorato: tutto del Base + arredamento completo + colori e texture + render alta qualità
+     - **Professional (100€)**: tutto del Premium + modello 3D completo + tour virtuale + rendering fotorealistici
+   - Ogni card con checkmarks verdi, prezzo grande, CTA button
+
+5. **Contatti**
+   - Titolo: "Parliamone"
+   - Email: info@tuoservizio.it
+   - Telefono: +39 333 123 4567
+   - Testo invito: "Richiedi un preventivo gratuito o inviaci la tua planimetria per una valutazione senza impegno"
+   - Sfondo grigio chiaro (#f5f5f7)
+
+6. **Footer**
+   - Copyright: "© 2026 DigiPlan. Tutti i diritti riservati."
+
+**STILE E DESIGN:**
+- Ispirazione: design minimal Apple (fonts San Francisco-like, spaziature generose)
+- Palette colori: gradiente viola-blu (#667eea, #764ba2), grigio chiaro (#f5f5f7), bianco
+- Tipografia: sistema Apple, font-weight variabile (300-700)
+- Animazioni sottili: hover effects, scroll indicator bounce
+- Responsive: mobile-first, breakpoint 768px
+- Elementi arrotondati (border-radius: 20-30px)
+- Box-shadow soft per profondità
+
+**ELEMENTI INTERATTIVI:**
+- Tutti i button e card con hover effect (translateY e shadow)
+- Scroll smooth agli anchor link
+- CTA button con effetto scale on hover
+
+**TECNOLOGIE:**
+- HTML5, CSS3 puro (no framework)
+- Nessuna dipendenza JavaScript
+- Un solo file HTML self-contained
+
+Il risultato deve essere elegante, professionale, con forte impatto visivo ma senza eccessi, perfetto per professionisti del settore immobiliare.
