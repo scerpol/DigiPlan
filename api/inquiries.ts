@@ -24,7 +24,9 @@ export default async function handler(req: Req, res: Res) {
 
   const apiKey = process.env.SENDGRID_API_KEY_2;
   if (!apiKey) {
-    return res.status(500).json({ success: false, error: "SENDGRID_API_KEY_2 missing" });
+    return res
+      .status(500)
+      .json({ success: false, error: "SENDGRID_API_KEY_2 missing" });
   }
 
   try {
@@ -34,15 +36,16 @@ export default async function handler(req: Req, res: Res) {
     const email = body.email ?? "";
     const service = body.package ?? body.service ?? "Richiesta";
     const message = body.message ?? "";
-    const phone = body.phone ?? "-";
 
     if (!email || !message) {
-      return res.status(400).json({ success: false, error: "Missing email/message" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Missing email/message" });
     }
 
     let attachments: any[] = [];
 
-    // ✅ CASO 1: attachment singolo (come nel tuo payload)
+    // ✅ CASO 1: attachment singolo (stringa dataURL)
     if (body.attachment && typeof body.attachment === "string") {
       const contentStr = body.attachment;
       const base64 = contentStr.includes("base64,")
@@ -84,7 +87,6 @@ export default async function handler(req: Req, res: Res) {
       text:
         `Nome: ${name}\n` +
         `Email: ${email}\n` +
-        `Telefono: ${phone}\n` +
         `Pacchetto: ${service}\n\n` +
         `Messaggio:\n${message}\n`,
       attachments,
@@ -92,6 +94,8 @@ export default async function handler(req: Req, res: Res) {
 
     return res.status(200).json({ success: true });
   } catch (e: any) {
-    return res.status(500).json({ success: false, error: e?.message || "Send failed" });
+    return res
+      .status(500)
+      .json({ success: false, error: e?.message || "Send failed" });
   }
 }
