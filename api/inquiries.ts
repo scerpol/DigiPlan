@@ -1,16 +1,19 @@
 import sgMail from "@sendgrid/mail";
 
-type Req = {
-  method?: string;
-  body?: any;
-};
-
+type Req = { method?: string; body?: any };
 type Res = {
   status: (code: number) => Res;
   json: (data: any) => any;
   end: () => any;
   setHeader: (name: string, value: string) => any;
 };
+
+function parseDataUrl(dataUrl: string): { mime: string; base64: string } {
+  // data:<mime>;base64,<payload>
+  const match = /^data:(.*?);base64,(.*)$/.exec(dataUrl);
+  if (!match) return { mime: "application/octet-stream", base64: dataUrl };
+  return { mime: match[1] || "application/octet-stream", base64: match[2] || "" };
+}
 
 export default async function handler(req: Req, res: Res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,9 +27,7 @@ export default async function handler(req: Req, res: Res) {
 
   const apiKey = process.env.SENDGRID_API_KEY_2;
   if (!apiKey) {
-    return res
-      .status(500)
-      .json({ success: false, error: "SENDGRID_API_KEY_2 missing" });
+    return res.status(500).json({ success: false, error: "SENDGRID_API_KEY_2 missing" });
   }
 
   try {
@@ -38,43 +39,45 @@ export default async function handler(req: Req, res: Res) {
     const message = body.message ?? "";
 
     if (!email || !message) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Missing email/message" });
+      return res.status(400).json({ success: false, error: "Missing email/message" });
     }
 
     let attachments: any[] = [];
 
-    // ✅ CASO 1: attachment singolo (stringa dataURL)
+    // ✅ Caso principale: attachment singolo + nome/tipo inviati dal form
     if (body.attachment && typeof body.attachment === "string") {
-      const contentStr = body.attachment;
-      const base64 = contentStr.includes("base64,")
-        ? contentStr.split("base64,")[1]
-        : contentStr;
+      const { mime, base64 } = parseDataUrl(body.attachment);
+
+      const filename =
+        (typeof body.attachmentName === "string" && body.attachmentName.trim()) ||
+        "allegato";
+
+      const type =
+        (typeof body.attachmentType === "string" && body.attachmentType.trim()) ||
+        mime ||
+        "application/octet-stream";
 
       attachments.push({
         content: base64,
-        filename: "allegato.jpg",
-        type: "image/jpeg",
+        filename,
+        type,
         disposition: "attachment",
       });
     }
 
-    // ✅ CASO 2: array attachments
+    // ✅ Compatibilità: array attachments (se un domani lo rimetti)
     if (Array.isArray(body.attachments)) {
-      attachments = body.attachments.map((a: any) => {
-        const contentStr = String(a.content);
-        const base64 = contentStr.includes("base64,")
-          ? contentStr.split("base64,")[1]
-          : contentStr;
-
-        return {
-          content: base64,
-          filename: a.filename || "file",
-          type: a.type || "application/octet-stream",
-          disposition: "attachment",
-        };
-      });
+      attachments = body.attachments
+        .filter((a: any) => a?.content)
+        .map((a: any) => {
+          const { mime, base64 } = parseDataUrl(String(a.content || ""));
+          return {
+            content: base64,
+            filename: String(a.filename || "file"),
+            type: String(a.type || mime || "application/octet-stream"),
+            disposition: "attachment",
+          };
+        });
     }
 
     sgMail.setApiKey(apiKey);
@@ -94,8 +97,6 @@ export default async function handler(req: Req, res: Res) {
 
     return res.status(200).json({ success: true });
   } catch (e: any) {
-    return res
-      .status(500)
-      .json({ success: false, error: e?.message || "Send failed" });
+    return res.status(500).json({ success: false, error: e?.message || "Send failed" });
   }
 }
