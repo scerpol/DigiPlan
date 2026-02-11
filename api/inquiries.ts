@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const message = body.message ?? body.messaggio ?? body.notes ?? "";
 
     if (!email || !message) {
-      return res.status(400).json({ ok: false, error: "Missing email/message" });
+      return res.status(400).json({ success: false, error: "Missing email/message" });
     }
 
     sgMail.setApiKey(apiKey);
@@ -42,8 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `Messaggio:\n${message}\n`,
     });
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ success: true });
   } catch (e: any) {
-    return res.status(500).json({ ok: false, error: e?.message || "Send failed" });
+    return res.status(500).json({ success: false, error: e?.message || "Send failed" });
   }
 }
