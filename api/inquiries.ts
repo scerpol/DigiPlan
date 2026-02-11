@@ -13,7 +13,6 @@ type Res = {
 };
 
 export default async function handler(req: Req, res: Res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -31,36 +30,49 @@ export default async function handler(req: Req, res: Res) {
   try {
     const body = req.body || {};
 
-    const name = body.name ?? body.fullName ?? body.nome ?? "-";
-    const email = body.email ?? body.mail ?? body.from ?? "";
-    const phone = body.phone ?? body.telefono ?? body.tel ?? "-";
-    const service = body.service ?? body.tipo ?? body.category ?? "Richiesta";
-    const message = body.message ?? body.messaggio ?? body.notes ?? "";
+    const name = body.name ?? "-";
+    const email = body.email ?? "";
+    const service = body.package ?? body.service ?? "Richiesta";
+    const message = body.message ?? "";
+    const phone = body.phone ?? "-";
 
     if (!email || !message) {
       return res.status(400).json({ success: false, error: "Missing email/message" });
     }
 
-    // Allegati: [{ filename, type, content: "data:...;base64,XXXX" }]
-    const rawAttachments = body.attachments ?? body.files ?? [];
-    const attachments = Array.isArray(rawAttachments)
-      ? rawAttachments
-          .filter((a: any) => a?.content && a?.filename)
-          .slice(0, 5)
-          .map((a: any) => {
-            const contentStr = String(a.content);
-            const base64 = contentStr.includes("base64,")
-              ? contentStr.split("base64,")[1]
-              : contentStr;
+    let attachments: any[] = [];
 
-            return {
-              content: base64,
-              filename: String(a.filename),
-              type: a.type ? String(a.type) : "application/octet-stream",
-              disposition: "attachment" as const,
-            };
-          })
-      : [];
+    // ✅ CASO 1: attachment singolo (come nel tuo payload)
+    if (body.attachment && typeof body.attachment === "string") {
+      const contentStr = body.attachment;
+      const base64 = contentStr.includes("base64,")
+        ? contentStr.split("base64,")[1]
+        : contentStr;
+
+      attachments.push({
+        content: base64,
+        filename: "allegato.jpg",
+        type: "image/jpeg",
+        disposition: "attachment",
+      });
+    }
+
+    // ✅ CASO 2: array attachments
+    if (Array.isArray(body.attachments)) {
+      attachments = body.attachments.map((a: any) => {
+        const contentStr = String(a.content);
+        const base64 = contentStr.includes("base64,")
+          ? contentStr.split("base64,")[1]
+          : contentStr;
+
+        return {
+          content: base64,
+          filename: a.filename || "file",
+          type: a.type || "application/octet-stream",
+          disposition: "attachment",
+        };
+      });
+    }
 
     sgMail.setApiKey(apiKey);
 
@@ -73,7 +85,7 @@ export default async function handler(req: Req, res: Res) {
         `Nome: ${name}\n` +
         `Email: ${email}\n` +
         `Telefono: ${phone}\n` +
-        `Servizio: ${service}\n\n` +
+        `Pacchetto: ${service}\n\n` +
         `Messaggio:\n${message}\n`,
       attachments,
     });
