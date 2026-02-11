@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@shared/routes";
 import type { InsertInquiry } from "@shared/schema";
 import { useCreateInquiry } from "@/hooks/use-inquiries";
-import { Loader2, Send, Paperclip } from "lucide-react";
+import { Loader2, Send, Paperclip, X } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -173,9 +173,22 @@ export function ContactForm() {
                 />
               </label>
               {fileName && (
-                <span className="text-sm text-gray-500 truncate max-w-[200px]">
-                  {fileName}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 truncate max-w-[200px]">
+                    {fileName}
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="button-remove-attachment"
+                    onClick={() => {
+                      setFileName("");
+                      form.setValue("attachment", undefined);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div      
               )}
             </div>
           </div>
