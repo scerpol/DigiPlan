@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface PricingFeature {
@@ -52,8 +52,8 @@ export function PricingCard({
       <ul className="space-y-4 mb-8">
         {features.map((feature, i) => (
           <li key={i} className={`flex items-start gap-3 text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400'}`}>
-            <div className={`mt-0.5 rounded-full p-0.5 ${feature.included ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
-              {feature.included ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <X className="w-3.5 h-3.5" strokeWidth={3} />}
+            <div className={`mt-0.5 rounded-full p-0.5 ${feature.included ? 'bg-green-100 text-green-600' : 'bg-primary/10 text-primary'}`}>
+              {feature.included ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : <Plus className="w-3.5 h-3.5" strokeWidth={3} />}              
             </div>
             <span>{feature.text}</span>
           </li>
