@@ -49,6 +49,7 @@ export function ContactForm() {
     },
   });
 
+  // Listen for custom event from pricing cards
   useEffect(() => {
     const handlePackageSelect = (e: CustomEvent<string>) => {
       form.setValue("package", e.detail);
@@ -63,6 +64,22 @@ export function ContactForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ✅ BLOCCO DIMENSIONE
+    const MAX_MB = 2; // cambia se vuoi (es. 3)
+    if (file.size > MAX_MB * 1024 * 1024) {
+      alert(
+        `File troppo grande (${(file.size / 1024 / 1024).toFixed(
+          2
+        )} MB). Carica un file sotto i ${MAX_MB} MB.`
+      );
+      setFileName("");
+      form.setValue("attachment", "");
+      form.setValue("attachmentName", "");
+      form.setValue("attachmentType", "");
+      e.target.value = "";
+      return;
+    }
+
     setFileName(file.name);
     form.setValue("attachmentName", file.name);
     form.setValue("attachmentType", file.type || "");
@@ -75,7 +92,7 @@ export function ContactForm() {
   };
 
   function onSubmit(data: FormValues) {
-    // Per evitare l'errore "message required" anche in edge-case
+    // payload "robusto" per evitare undefined
     const payload: FormValues = {
       ...data,
       name: String(data.name || ""),
