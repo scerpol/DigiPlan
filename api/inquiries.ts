@@ -1,8 +1,19 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import sgMail from "@sendgrid/mail";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS (non indispensabile se chiami dallo stesso dominio, ma non dà fastidio)
+type Req = {
+  method?: string;
+  body?: any;
+};
+
+type Res = {
+  status: (code: number) => Res;
+  json: (data: any) => any;
+  end: () => any;
+  setHeader: (name: string, value: string) => any;
+};
+
+export default async function handler(req: Req, res: Res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -18,9 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const body = (req.body || {}) as any;
+    const body = req.body || {};
 
-    // Campi "tolleranti" (così non si rompe se i nomi cambiano leggermente)
     const name = body.name ?? body.fullName ?? body.nome ?? "-";
     const email = body.email ?? body.mail ?? body.from ?? "";
     const phone = body.phone ?? body.telefono ?? body.tel ?? "-";
@@ -31,17 +41,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ success: false, error: "Missing email/message" });
     }
 
-    // Allegati: il client spesso manda [{ filename, type, content: "data:...;base64,XXXX" }]
+    // Allegati: [{ filename, type, content: "data:...;base64,XXXX" }]
     const rawAttachments = body.attachments ?? body.files ?? [];
     const attachments = Array.isArray(rawAttachments)
       ? rawAttachments
           .filter((a: any) => a?.content && a?.filename)
-          .slice(0, 5) // limite prudente
+          .slice(0, 5)
           .map((a: any) => {
             const contentStr = String(a.content);
             const base64 = contentStr.includes("base64,")
               ? contentStr.split("base64,")[1]
-              : contentStr; // se già base64 puro
+              : contentStr;
 
             return {
               content: base64,
@@ -55,8 +65,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sgMail.setApiKey(apiKey);
 
     await sgMail.send({
-      to: "digiplanservice@gmail.com", // dove ricevi
-      from: "digiplanservice@gmail.com", // meglio poi un mittente verificato SendGrid
+      to: "digiplanservice@gmail.com",
+      from: "digiplanservice@gmail.com",
       replyTo: email,
       subject: `Nuova richiesta: ${service}`,
       text:
@@ -65,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `Telefono: ${phone}\n` +
         `Servizio: ${service}\n\n` +
         `Messaggio:\n${message}\n`,
-      attachments, // ✅ allegati
+      attachments,
     });
 
     return res.status(200).json({ success: true });
