@@ -32,6 +32,45 @@ type FormValues = InsertInquiry & {
   attachmentType?: string;
 };
 
+async function fileToDataUrl(file: File): Promise<string> {
+  return await new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ""));
+    r.onerror = () => reject(new Error("Errore lettura file"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function compressImageToDataUrl(
+  file: File,
+  opts: { maxWidth: number; maxHeight: number; quality: number; mime: string }
+): Promise<string> {
+  const dataUrl = await fileToDataUrl(file);
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("Errore caricamento immagine"));
+    i.src = dataUrl;
+  });
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return dataUrl;
+
+  let { width, height } = img;
+  const ratio = Math.min(opts.maxWidth / width, opts.maxHeight / height, 1);
+  width = Math.round(width * ratio);
+  height = Math.round(height * ratio);
+
+  canvas.width = width;
+  canvas.height = height;
+
+  ctx.drawImage(img, 0, 0, width, height);
+
+  return canvas.toDataURL(opts.mime, opts.quality);
+}
+
 export function ContactForm() {
   const { mutate, isPending } = useCreateInquiry();
   const [fileName, setFileName] = useState<string>("");
@@ -60,13 +99,16 @@ export function ContactForm() {
       window.removeEventListener("select-package", handlePackageSelect as EventListener);
   }, [form]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ✅ BLOCCO DIMENSIONE
-    const MAX_MB = 2; // cambia se vuoi (es. 3)
-    if (file.size > MAX_MB * 1024 * 1024) {
+    const MAX_MB = 4;
+
+    const isImage = file.type.startsWith("image/");
+
+    // Per PDF/DWG/altro: niente compressione, quindi blocco subito se troppo grande
+    if (!isImage && file.size > MAX_MB * 1024 * 1024) {
       alert(
         `File troppo grande (${(file.size / 1024 / 1024).toFixed(
           2
@@ -84,15 +126,46 @@ export function ContactForm() {
     form.setValue("attachmentName", file.name);
     form.setValue("attachmentType", file.type || "");
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      form.setValue("attachment", String(reader.result || ""));
-    };
-    reader.readAsDataURL(file);
+    try {
+      if (isImage) {
+        // ✅ comprimo sempre le immagini (utile soprattutto da mobile)
+        const compressedDataUrl = await compressImageToDataUrl(file, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.82,
+          mime: "image/jpeg",
+        });
+
+        // controllo prudente sulla lunghezza del dataURL (base64)
+        if (compressedDataUrl.length > 6_500_000) {
+          alert("Immagine ancora troppo grande. Prova una foto più leggera.");
+          setFileName("");
+          form.setValue("attachment", "");
+          form.setValue("attachmentName", "");
+          form.setValue("attachmentType", "");
+          e.target.value = "";
+          return;
+        }
+
+        form.setValue("attachment", compressedDataUrl);
+        form.setValue("attachmentType", "image/jpeg");
+        return;
+      }
+
+      // ✅ altri file (es. PDF/DWG) -> dataURL normale
+      const dataUrl = await fileToDataUrl(file);
+      form.setValue("attachment", dataUrl);
+    } catch {
+      alert("Errore nel caricamento del file. Riprova.");
+      setFileName("");
+      form.setValue("attachment", "");
+      form.setValue("attachmentName", "");
+      form.setValue("attachmentType", "");
+      e.target.value = "";
+    }
   };
 
   function onSubmit(data: FormValues) {
-    // payload "robusto" per evitare undefined
     const payload: FormValues = {
       ...data,
       name: String(data.name || ""),
