@@ -248,8 +248,8 @@ export function ContactForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white opacity-100 shadow-xl border-gray-200">
-                    <SelectItem value="Base">Piano Base (€50)</SelectItem>
-                    <SelectItem value="Premium">Piano Premium (€150)</SelectItem>
+                    <SelectItem value="Base">Piano Base (€55)</SelectItem>
+                    <SelectItem value="Premium">Piano Premium (€160)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
