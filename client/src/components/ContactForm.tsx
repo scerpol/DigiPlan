@@ -26,11 +26,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
+type FormValues = InsertInquiry & {
+  attachment?: string;
+  attachmentName?: string;
+  attachmentType?: string;
+};
+
 export function ContactForm() {
   const { mutate, isPending } = useCreateInquiry();
   const [fileName, setFileName] = useState<string>("");
 
-  const form = useForm<InsertInquiry & { attachment?: string }>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(api.inquiries.create.input),
     defaultValues: {
       name: "",
@@ -38,10 +44,11 @@ export function ContactForm() {
       package: "Base",
       message: "",
       attachment: "",
+      attachmentName: "",
+      attachmentType: "",
     },
   });
 
-  // Listen for custom event from pricing cards
   useEffect(() => {
     const handlePackageSelect = (e: CustomEvent<string>) => {
       form.setValue("package", e.detail);
@@ -49,10 +56,7 @@ export function ContactForm() {
 
     window.addEventListener("select-package", handlePackageSelect as EventListener);
     return () =>
-      window.removeEventListener(
-        "select-package",
-        handlePackageSelect as EventListener
-      );
+      window.removeEventListener("select-package", handlePackageSelect as EventListener);
   }, [form]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +64,8 @@ export function ContactForm() {
     if (!file) return;
 
     setFileName(file.name);
+    form.setValue("attachmentName", file.name);
+    form.setValue("attachmentType", file.type || "");
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -68,8 +74,20 @@ export function ContactForm() {
     reader.readAsDataURL(file);
   };
 
-  function onSubmit(data: InsertInquiry & { attachment?: string }) {
-    mutate(data, {
+  function onSubmit(data: FormValues) {
+    // Per evitare l'errore "message required" anche in edge-case
+    const payload: FormValues = {
+      ...data,
+      name: String(data.name || ""),
+      email: String(data.email || ""),
+      package: String((data as any).package || "Base"),
+      message: String(data.message || ""),
+      attachment: String(data.attachment || ""),
+      attachmentName: String(data.attachmentName || ""),
+      attachmentType: String(data.attachmentType || ""),
+    };
+
+    mutate(payload, {
       onSuccess: () => {
         form.reset({
           name: "",
@@ -77,6 +95,8 @@ export function ContactForm() {
           package: "Base",
           message: "",
           attachment: "",
+          attachmentName: "",
+          attachmentType: "",
         });
         setFileName("");
       },
@@ -86,19 +106,14 @@ export function ContactForm() {
   return (
     <div className="bg-white rounded-3xl p-6 md:p-12 shadow-2xl border border-gray-100 w-full">
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4 md:space-y-6"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-gray-700 font-medium">
-                    Nome
-                  </FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">Nome</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Mario Rossi"
@@ -116,9 +131,7 @@ export function ContactForm() {
               name="email"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-gray-700 font-medium">
-                    Email
-                  </FormLabel>
+                  <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="mario@esempio.it"
@@ -137,9 +150,7 @@ export function ContactForm() {
             name="package"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-gray-700 font-medium">
-                  Pacchetto
-                </FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Pacchetto</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white transition-all h-10 md:h-12 shadow-none">
@@ -147,8 +158,8 @@ export function ContactForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white opacity-100 shadow-xl border-gray-200">
-                    <SelectItem value="Base">Piano Base (€55)</SelectItem>
-                    <SelectItem value="Premium">Piano Premium (€160)</SelectItem>
+                    <SelectItem value="Base">Piano Base (€50)</SelectItem>
+                    <SelectItem value="Premium">Piano Premium (€150)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -161,9 +172,7 @@ export function ContactForm() {
             name="message"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-gray-700 font-medium">
-                  Messaggio
-                </FormLabel>
+                <FormLabel className="text-gray-700 font-medium">Messaggio</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Raccontaci del tuo progetto..."
@@ -200,10 +209,11 @@ export function ContactForm() {
                   </span>
                   <button
                     type="button"
-                    data-testid="button-remove-attachment"
                     onClick={() => {
                       setFileName("");
                       form.setValue("attachment", "");
+                      form.setValue("attachmentName", "");
+                      form.setValue("attachmentType", "");
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                     aria-label="Rimuovi allegato"
