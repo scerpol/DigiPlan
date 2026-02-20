@@ -2,7 +2,17 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import sgMail from "@sendgrid/mail";
+import sgMail, { type MailDataRequired } from "@sendgrid/mail";
+
+/** Escapes special HTML characters to prevent XSS in email content */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -23,19 +33,19 @@ export async function registerRoutes(
       sgMail.setApiKey(apiKey);
 
       // 3) Costruzione messaggio
-      const msg: any = {
+      const msg: MailDataRequired = {
         to: "digiplanservice@gmail.com",
         from: "digiplanservice@gmail.com", // deve essere verificato su SendGrid (Single Sender)
         replyTo: input.email, // così rispondi al cliente
-        subject: `Nuova richiesta dal sito - ${new Date().toLocaleString("it-IT")} - ${input.email}`,
+        subject: `Nuova richiesta dal sito - ${new Date().toLocaleString("it-IT")} - ${escapeHtml(input.email)}`,
         text: input.message || "Nuova richiesta dal sito",
         html: `
           <h3>Nuova richiesta di contatto</h3>
-          <p><strong>Nome:</strong> ${input.name}</p>
-          <p><strong>Email:</strong> ${input.email}</p>
-          <p><strong>Pacchetto scelto:</strong> ${input.package}</p>
+          <p><strong>Nome:</strong> ${escapeHtml(input.name)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+          <p><strong>Pacchetto scelto:</strong> ${escapeHtml(input.package)}</p>
           <p><strong>Messaggio:</strong></p>
-          <p>${input.message}</p>
+          <p>${escapeHtml(input.message)}</p>
         `,
       };
 
