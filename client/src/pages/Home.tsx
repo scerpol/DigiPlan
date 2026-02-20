@@ -10,6 +10,24 @@ import transformationMainImg from "@assets/Planimetria_semplice_1770801040265.jp
 import logoImg from "@assets/Sfondo_1770395803934.png";
 import teamSketchImg from "@/assets/images/team-sketch.png";
 
+const transformationSlides = [
+  {
+    img: transformationMainImg,
+    position: "center",
+    label: "Planimetria semplice",
+  },
+  {
+    img: transformationImg2,
+    position: "20% center",
+    label: "Spaccato assonometrico",
+  },
+  {
+    img: transformationImg1,
+    position: "center",
+    label: "Spaccato assonometrico arredato",
+  },
+];
+
 export default function Home() {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeTransformationSlide, setActiveTransformationSlide] = useState(0);
@@ -23,7 +41,7 @@ export default function Home() {
     autoScrollTimer.current = setInterval(() => {
       if (isUserScrolling.current) return;
       setActiveTransformationSlide((prev) => {
-        const next = (prev + 1) % 3;
+        const next = (prev + 1) % transformationSlides.length;
         if (carouselRef.current) {
           const cardWidth = carouselRef.current.offsetWidth * 0.85;
           carouselRef.current.scrollTo({ left: next * cardWidth, behavior: 'smooth' });
@@ -163,23 +181,7 @@ export default function Home() {
 
           {/* Desktop layout - three cards side by side */}
           <div className="hidden md:flex gap-6 mt-12">
-            {[
-              {
-                img: transformationMainImg,
-                position: "center",
-                label: "Planimetria semplice",
-              },
-              {
-                img: transformationImg2,
-                position: "20% center",
-                label: "Spaccato assonometrico",
-              },
-              {
-                img: transformationImg1,
-                position: "center",
-                label: "Spaccato assonometrico arredato",
-              }
-            ].map((item, i) => (
+            {transformationSlides.map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -210,23 +212,7 @@ export default function Home() {
               setActiveTransformationSlide(activeIndex);
             }}
           >
-            {[
-              {
-                img: transformationMainImg,
-                position: "center",
-                label: "Planimetria semplice",
-              },
-              {
-                img: transformationImg2,
-                position: "20% center",
-                label: "Spaccato assonometrico",
-              },
-              {
-                img: transformationImg1,
-                position: "center",
-                label: "Spaccato assonometrico arredato",
-              }
-            ].map((item, i) => (
+            {transformationSlides.map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -246,7 +232,7 @@ export default function Home() {
           
           {/* Carousel Dots - Mobile Only */}
           <div className="flex justify-center gap-2 mt-6 md:hidden">
-            {[0, 1, 2].map((i) => (
+            {transformationSlides.map((_, i) => (
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
